@@ -3,6 +3,8 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from starlette.datastructures import MutableHeaders
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 import app.models  # noqa: F401 - register all models for SQLAlchemy relationships
 from app.api.routes import api_router
@@ -47,6 +49,28 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Strip Made-with / branding headers from responses
+    class StripBrandingMiddleware:
+        def __init__(self, app: ASGIApp) -> None:
+            self.app = app
+
+        async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+            if scope["type"] != "http":
+                await self.app(scope, receive, send)
+                return
+
+            async def send_without_branding(message: Message) -> None:
+                if message["type"] == "http.response.start":
+                    headers = MutableHeaders(raw=message["headers"])
+                    for key in list(headers.keys()):
+                        if "made-with" in key.lower() or "cursor" in key.lower():
+                            headers.pop(key, None)
+                await send(message)
+
+            await self.app(scope, receive, send_without_branding)
+
+    app.add_middleware(StripBrandingMiddleware)
 
     # Include versioned API router
     app.include_router(api_router, prefix="/api")
