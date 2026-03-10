@@ -29,6 +29,8 @@ class Settings(BaseSettings):
 
     API_V1_PREFIX: str = "/api"
 
+    # Render provides DATABASE_URL; otherwise use POSTGRES_* vars
+    DATABASE_URL: Optional[str] = None
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str = "postgres"
@@ -36,6 +38,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "agent_orchestrator"
     SQLALCHEMY_ECHO: bool = False
 
+    # Render provides REDIS_URL when Redis is connected
     REDIS_URL: str = "redis://localhost:6379/0"
     CELERY_BROKER_URL: Optional[str] = None
     CELERY_RESULT_BACKEND: Optional[str] = None
@@ -57,6 +60,14 @@ class Settings(BaseSettings):
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
+        if self.DATABASE_URL:
+            # Render / Railway provide DATABASE_URL; ensure psycopg2 scheme
+            url = self.DATABASE_URL
+            if url.startswith("postgres://"):
+                url = "postgresql+psycopg2://" + url[11:]
+            elif url.startswith("postgresql://") and "psycopg2" not in url:
+                url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+            return url
         return _build_postgres_uri(
             self.POSTGRES_USER,
             self.POSTGRES_PASSWORD,

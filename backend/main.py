@@ -20,15 +20,14 @@ def create_app() -> FastAPI:
     """
     configure_logging()
 
-    # Create DB tables when running locally (e.g. tests, dev) so upload works
-    if settings.ENV == "local":
-        try:
-            from app.database.base import Base
-            from app.database.session import engine
-            Base.metadata.create_all(bind=engine)
-        except Exception as e:
-            import sys
-            print(f"create_all skipped: {e}", file=sys.stderr)
+    # Create DB tables on startup (idempotent; safe for local + Render/prod)
+    try:
+        from app.database.base import Base
+        from app.database.session import engine
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        import sys
+        print(f"create_all skipped: {e}", file=sys.stderr)
 
     app = FastAPI(
         title="AI Agent Orchestration Backend",
