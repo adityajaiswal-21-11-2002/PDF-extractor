@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Agent Orchestrator - PDF Upload</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        --bg: #0f172a;
+        --bg-elevated: #020617;
+        --accent: #38bdf8;
+        --accent-soft: rgba(56, 189, 248, 0.15);
+        --accent-strong: #0ea5e9;
+        --danger: #f97373;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --border: rgba(148, 163, 184, 0.3);
+        --radius-lg: 16px;
+        --radius-md: 10px;
+        --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.6);
+        --transition-fast: 0.18s ease-out;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #1f2937 0, #020617 55%);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px;
+      }
+
+      .shell {
+        width: 100%;
+        max-width: 980px;
+        background: linear-gradient(
+              135deg,
+              rgba(148, 163, 184, 0.18),
+              transparent 40%
+            ),
+          linear-gradient(225deg, rgba(56, 189, 248, 0.2), transparent 45%),
+          linear-gradient(180deg, rgba(15, 23, 42, 0.96), #020617);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        backdrop-filter: blur(22px);
+      }
+
+      @media (min-width: 900px) {
+        .shell {
+          padding: 28px 32px 26px;
+        }
+      }
+
+      .shell-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .logo-mark {
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        background: radial-gradient(circle at 20% 20%, #f9fafb, #38bdf8 45%, #0f172a);
+        box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.4),
+          0 10px 35px rgba(15, 23, 42, 0.8);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .logo-mark::after {
+        content: "";
+        position: absolute;
+        inset: 35% 18%;
+        border-radius: 999px;
+        background: conic-gradient(
+          from 180deg,
+          rgba(15, 23, 42, 0.2),
+          rgba(15, 23, 42, 0.85)
+        );
+      }
+
+      .logo-text-main {
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        font-size: 0.98rem;
+      }
+
+      .logo-text-sub {
+        font-size: 0.74rem;
+        color: var(--muted);
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+
+      .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2.4fr);
+        gap: 20px;
+      }
+
+      @media (max-width: 800px) {
+        .grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .panel {
+        background: radial-gradient(circle at top left, #1f2937 0, #020617 70%);
+        border-radius: var(--radius-lg);
+        padding: 18px 18px 16px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        box-shadow: 0 14px 35px rgba(15, 23, 42, 0.7);
+      }
+
+      .panel + .panel {
+        background: radial-gradient(circle at top, #020617 0, #020617 65%);
+      }
+
+      .panel-title {
+        font-size: 0.92rem;
+        font-weight: 500;
+        margin-bottom: 6px;
+      }
+
+      .panel-subtitle {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+
+      .field {
+        margin-bottom: 10px;
+      }
+
+      .label {
+        display: block;
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+
+      .input,
+      .file-input {
+        width: 100%;
+        padding: 8px 9px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        background: radial-gradient(circle at top left, #020617, #020617 68%);
+        color: var(--text);
+        font-size: 0.84rem;
+        outline: none;
+        transition: border-color var(--transition-fast),
+          box-shadow var(--transition-fast), background-color var(--transition-fast),
+          transform var(--transition-fast);
+      }
+
+      .input::placeholder {
+        color: #6b7280;
+      }
+
+      .input:focus,
+      .file-input:focus {
+        border-color: var(--accent-strong);
+        box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5),
+          0 10px 35px rgba(8, 47, 73, 0.9);
+        transform: translateY(-0.5px);
+      }
+
+      .file-input {
+        padding: 7px 9px;
+        cursor: pointer;
+      }
+
+      .hint {
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 999px;
+        padding: 9px 18px;
+        font-size: 0.84rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #0f172a;
+        background: radial-gradient(
+          circle at 0 0,
+          #f9fafb 0,
+          #e0f2fe 35%,
+          #38bdf8 100%
+        );
+        box-shadow: 0 10px 25px rgba(56, 189, 248, 0.55);
+        transition: transform var(--transition-fast),
+          box-shadow var(--transition-fast), filter var(--transition-fast);
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 32px rgba(56, 189, 248, 0.75);
+        filter: brightness(1.03);
+      }
+
+      button:active {
+        transform: translateY(0);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.9);
+        filter: brightness(0.98);
+      }
+
+      button[disabled] {
+        opacity: 0.65;
+        cursor: default;
+        box-shadow: none;
+        transform: none;
+      }
+
+      .button-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 9px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.6);
+        color: var(--muted);
+      }
+
+      .pill-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
+      .divider {
+        height: 1px;
+        background: radial-gradient(
+          circle at center,
+          rgba(148, 163, 184, 0.7),
+          transparent
+        );
+        margin: 10px 0 8px;
+        opacity: 0.8;
+      }
+
+      .log {
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(30, 64, 175, 0.7);
+        padding: 10px 11px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 0.76rem;
+        max-height: 190px;
+        overflow: auto;
+        color: #e5e7eb;
+      }
+
+      .log-line {
+        margin-bottom: 4px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .log-line span.key {
+        color: #9ca3af;
+      }
+
+      .log-line span.value {
+        color: #e5e7eb;
+      }
+
+      .log-line.status-running span.value {
+        color: #38bdf8;
+      }
+
+      .log-line.status-completed span.value {
+        color: #4ade80;
+      }
+
+      .log-line.status-failed span.value {
+        color: #f97373;
+      }
+
+      .badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .badge {
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.6);
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+
+      .small {
+        font-size: 0.74rem;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="shell-header">
+        <div class="logo">
+          <div class="logo-mark"></div>
+          <div>
+            <div class="logo-text-main">AI Agent Orchestrator</div>
+            <div class="logo-text-sub">Upload a PDF · Get an email</div>
+          </div>
+        </div>
+        <div class="status-pill">
+          <div class="status-dot"></div>
+          Public HTML interface
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <div class="panel-title">Upload a PDF</div>
+          <div class="panel-subtitle">
+            Provide a recipient email and upload your PDF. The backend will
+            analyze it and compose an email asynchronously.
+          </div>
+
+          <form id="upload-form">
+            <div class="field">
+              <label class="label" for="recipient-email">Recipient email</label>
+              <input
+                id="recipient-email"
+                name="recipient_email"
+                type="email"
+                class="input"
+                placeholder="you@example.com"
+                required
+              />
+              <div class="hint">
+                Used for delivering the generated email. Must be a valid email
+                address.
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label" for="pdf-file">PDF file</label>
+              <input
+                id="pdf-file"
+                name="file"
+                type="file"
+                accept="application/pdf"
+                class="file-input"
+                required
+              />
+              <div class="hint">
+                Max 20MB, PDF only. Corrupted or unreadable PDFs will be
+                rejected with a clear error.
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button type="submit" id="upload-btn">
+                <span>Upload &amp; Start Job</span>
+              </button>
+              <div class="pill">
+                <span class="pill-dot"></span>
+                Background processing via Celery + LLM agents
+              </div>
+            </div>
+          </form>
+
+          <div class="divider"></div>
+
+          <div class="small">
+            This page talks to the backend API:
+            <code>/api/upload</code> to create a job and
+            <code>/api/jobs/{id}</code> to check status.
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Job status</div>
+          <div class="panel-subtitle">
+            After you upload, the job will be processed asynchronously. Watch
+            the status here.
+          </div>
+
+          <div class="badge-row">
+            <div class="badge">PENDING → PROCESSING → COMPLETED / FAILED</div>
+            <div class="badge">FastAPI · Celery · PostgreSQL · Redis</div>
+          </div>
+
+          <div class="log" id="log">
+            <div class="log-line">
+              <span class="key">info</span>
+              <span class="value">
+                Submit a PDF to start a new job.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const form = document.getElementById("upload-form");
+        const uploadBtn = document.getElementById("upload-btn");
+        const logEl = document.getElementById("log");
+
+        let activeJobId = null;
+        let pollTimer = null;
+
+        function appendLog(key, value, cssClass) {
+          const div = document.createElement("div");
+          div.className = "log-line" + (cssClass ? " " + cssClass : "");
+          div.innerHTML =
+            '<span class="key">' +
+            key +
+            "</span> " +
+            '<span class="value">' +
+            value +
+            "</span>";
+          logEl.appendChild(div);
+          logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function resetPolling() {
+          if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+          }
+        }
+
+        async function pollJob(jobId) {
+          resetPolling();
+          appendLog(
+            "poll",
+            "Started polling job " + jobId + " status...",
+            "status-running"
+          );
+
+          async function fetchStatus() {
+            try {
+              const resp = await fetch("/api/jobs/" + encodeURIComponent(jobId));
+              if (!resp.ok) {
+                const text = await resp.text();
+                appendLog(
+                  "error",
+                  "Status check failed (" + resp.status + "): " + text,
+                  "status-failed"
+                );
+                resetPolling();
+                return;
+              }
+              const data = await resp.json();
+              appendLog(
+                "status",
+                "Job " +
+                  data.id +
+                  " → " +
+                  data.status +
+                  (data.error_message ? " (" + data.error_message + ")" : ""),
+                data.status === "COMPLETED"
+                  ? "status-completed"
+                  : data.status === "FAILED"
+                  ? "status-failed"
+                  : "status-running"
+              );
+
+              if (data.status === "COMPLETED" || data.status === "FAILED") {
+                resetPolling();
+              }
+            } catch (err) {
+              appendLog(
+                "error",
+                "Error while polling job status: " + err,
+                "status-failed"
+              );
+              resetPolling();
+            }
+          }
+
+          await fetchStatus();
+          pollTimer = setInterval(fetchStatus, 4000);
+        }
+
+        form.addEventListener("submit", async function (evt) {
+          evt.preventDefault();
+
+          const emailInput = document.getElementById("recipient-email");
+          const fileInput = document.getElementById("pdf-file");
+
+          const email = emailInput.value.trim();
+          const file = fileInput.files[0];
+
+          if (!email || !file) {
+            appendLog(
+              "warn",
+              "Please provide a recipient email and a PDF file.",
+              "status-failed"
+            );
+            return;
+          }
+
+          uploadBtn.disabled = true;
+          uploadBtn.textContent = "Uploading...";
+          resetPolling();
+
+          const formData = new FormData();
+          formData.append("file", file);
+
+          appendLog(
+            "info",
+            "Uploading '" + file.name + "' for " + email + "...",
+            "status-running"
+          );
+
+          try {
+            const resp = await fetch(
+              "/api/upload?recipient_email=" + encodeURIComponent(email),
+              {
+                method: "POST",
+                body: formData,
+              }
+            );
+
+            const text = await resp.text();
+            let data = null;
+            try {
+              data = JSON.parse(text);
+            } catch (e) {
+              // Non-JSON error body
+            }
+
+            if (!resp.ok) {
+              const message =
+                (data && (data.detail || data.message)) ||
+                text ||
+                "Request failed.";
+              appendLog(
+                "error",
+                "Upload failed (" + resp.status + "): " + message,
+                "status-failed"
+              );
+              return;
+            }
+
+            appendLog(
+              "job",
+              "Job created with id " +
+                data.job_id +
+                ", initial status " +
+                data.status +
+                ".",
+              "status-running"
+            );
+
+            activeJobId = data.job_id;
+            pollJob(activeJobId);
+          } catch (err) {
+            appendLog(
+              "error",
+              "Unexpected error during upload: " + err,
+              "status-failed"
+            );
+          } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = "Upload & Start Job";
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
+
