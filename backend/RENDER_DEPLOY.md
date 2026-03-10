@@ -24,7 +24,7 @@ Deploy using your existing Aiven PostgreSQL and Redis Labs.
 3. Configure:
    - **Name**: `agent-api`
    - **Root Directory**: `backend`
-   - **Build Command**: `pip install -r requirements.txt`
+   - **Build Command**: `pip install --upgrade pip setuptools && pip install -r requirements.txt`
    - **Start Command**: `bash start.sh`
    - **Instance Type**: Free
 
@@ -64,6 +64,7 @@ In **Environment** → **Add Environment Variable**, add:
 
 | Issue | Fix |
 |-------|-----|
+| `ModuleNotFoundError: No module named 'pkg_resources'` | Set **Build Command** to `pip install --upgrade pip setuptools && pip install -r requirements.txt`. If using cached build, trigger **Clear build cache & deploy** |
 | Build fails | Check **Logs**; ensure `requirements.txt` and `start.sh` exist in `backend/` |
 | 503 / app not responding | Free tier sleeps after ~15 min; first request can take 30–60 seconds |
 | Database connection error | Check `DATABASE_URL`; Aiven must allow connections from Render |
