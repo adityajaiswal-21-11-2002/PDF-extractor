@@ -27,7 +27,7 @@ def build_email_sender_agent(llm) -> Agent:
     )
 
 
-def email_sender_task(agent: Agent, email_json: Dict[str, Any]) -> Task:
+def email_sender_task(agent: Agent, context_task=None) -> Task:
     """
     Task that ensures the email is properly formatted and safe to send.
     """
@@ -39,12 +39,14 @@ def email_sender_task(agent: Agent, email_json: Dict[str, Any]) -> Task:
         "Only output valid JSON."
     )
 
-    return Task(
+    task_kw = dict(
         description=description,
         agent=agent,
-        inputs={"email": email_json},
         expected_output="A JSON object with 'subject' and 'body' keys.",
         async_execution=False,
         output_json=True,
     )
+    if context_task is not None:
+        task_kw["context"] = [context_task]
+    return Task(**task_kw)
 

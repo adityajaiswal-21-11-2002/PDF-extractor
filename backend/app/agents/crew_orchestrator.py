@@ -1,3 +1,4 @@
+import json
 from typing import Any, Dict, Tuple
 
 from crewai import Crew, Process
@@ -19,10 +20,28 @@ from .email_sender import build_email_sender_agent, email_sender_task
 logger = get_logger(__name__)
 
 
+def _parse_json_output(raw: Any) -> Dict | None:
+    """Parse JSON from task output (string or dict)."""
+    if raw is None:
+        return None
+    if isinstance(raw, dict):
+        return raw
+    if hasattr(raw, "output_json") and raw.output_json is not None:
+        return raw.output_json
+    s = str(raw).strip()
+    if not s:
+        return None
+    try:
+        return json.loads(s)
+    except json.JSONDecodeError:
+        return None
+
+
 class CrewOrchestrator:
     """
     Orchestrates the multi-agent workflow:
     PDF Analyzer -> Email Composer -> Email Sender -> EmailService.
+    Uses crew.kickoff() with context for task chaining (crewai 0.11+).
     """
 
     def __init__(self, db: Session, job: ProcessingJob, document_text: str):
@@ -79,12 +98,11 @@ class CrewOrchestrator:
         composer_agent = build_email_composer_agent(self.llm)
         sender_agent = build_email_sender_agent(self.llm)
 
-        # Tasks
+        # Tasks with context chaining (crewai 0.11+)
         analyzer_task = pdf_analyzer_task(analyzer_agent, self.document_text)
-        composer_task = email_composer_task(composer_agent, analysis_json={})
-        sender_task = email_sender_task(sender_agent, email_json={})
+        composer_task = email_composer_task(composer_agent, context_task=analyzer_task)
+        sender_task = email_sender_task(sender_agent, context_task=composer_task)
 
-        # Crew with sequential process
         crew = Crew(
             agents=[analyzer_agent, composer_agent, sender_agent],
             tasks=[analyzer_task, composer_task, sender_task],
@@ -92,47 +110,34 @@ class CrewOrchestrator:
             verbose=False,
         )
 
-        # Execute analyzer first
         self._log_step("pdf_analyzer_start")
-        analyzer_result = analyzer_task.execute()
-        analysis_json = analyzer_result.output_json if hasattr(analyzer_result, "output_json") else None
-        if not analysis_json:
-            # Fallback deterministic structure
-            analysis_json = {
-                "headings": [],
-                "sections": [],
-                "entities": {},
-                "tables": [],
-            }
-        self._persist_agent_output(
-            "PDF Analyzer", "analysis", str(analyzer_result), analysis_json
-        )
+        crew.kickoff()
         self._log_step("pdf_analyzer_end")
 
-        # Email composer
+        # Get outputs from each task (crewai 0.11+)
+        analysis_json = _parse_json_output(getattr(analyzer_task, "output", None))
+        if not analysis_json:
+            analysis_json = {"headings": [], "sections": [], "entities": {}, "tables": []}
+        self._persist_agent_output(
+            "PDF Analyzer", "analysis", str(getattr(analyzer_task, "output", "")), analysis_json
+        )
+
         self._log_step("email_composer_start")
-        composer_task.inputs = {"analysis": analysis_json}
-        composer_result = composer_task.execute()
-        email_json = composer_result.output_json if hasattr(composer_result, "output_json") else None
+        email_json = _parse_json_output(getattr(composer_task, "output", None))
         if not email_json or "subject" not in email_json or "body" not in email_json:
             email_json = {
                 "subject": "Document Summary",
                 "body": render_email_body({"summary": "Your document has been processed."}),
             }
         self._persist_agent_output(
-            "Email Composer", "compose", str(composer_result), email_json
+            "Email Composer", "compose", str(getattr(composer_task, "output", "")), email_json
         )
         self._log_step("email_composer_end")
 
-        # Email sender validator
         self._log_step("email_sender_start")
-        sender_task.inputs = {"email": email_json}
-        sender_result = sender_task.execute()
-        final_email_json = (
-            sender_result.output_json if hasattr(sender_result, "output_json") else None
-        ) or email_json
+        final_email_json = _parse_json_output(getattr(sender_task, "output", None)) or email_json
         self._persist_agent_output(
-            "Email Sender", "finalize", str(sender_result), final_email_json
+            "Email Sender", "finalize", str(getattr(sender_task, "output", "")), final_email_json
         )
         self._log_step("email_sender_end")
 
@@ -141,7 +146,6 @@ class CrewOrchestrator:
             {"summary": "Your document has been processed."}
         )
 
-        # Send email via infrastructure layer
         self._log_step("email_delivery_start", {"to": recipient_email})
         self.email_service.send_email(
             db=self.db,

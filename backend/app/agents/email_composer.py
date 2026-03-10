@@ -28,7 +28,7 @@ def build_email_composer_agent(llm) -> Agent:
     )
 
 
-def email_composer_task(agent: Agent, analysis_json: Dict[str, Any]) -> Task:
+def email_composer_task(agent: Agent, context_task=None) -> Task:
     """
     Task for generating email subject and body from analysis.
     """
@@ -41,12 +41,14 @@ def email_composer_task(agent: Agent, analysis_json: Dict[str, Any]) -> Task:
         "Only output valid JSON. Do not include explanations."
     )
 
-    return Task(
+    task_kw = dict(
         description=description,
         agent=agent,
-        inputs={"analysis": analysis_json},
         expected_output="A JSON object with 'subject' and 'body' keys.",
         async_execution=False,
         output_json=True,
     )
+    if context_task is not None:
+        task_kw["context"] = [context_task]
+    return Task(**task_kw)
 
