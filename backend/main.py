@@ -1,3 +1,4 @@
+import app.pkg_resources_shim  # noqa: F401 - bootstrap before crewai
 from pathlib import Path
 
 from fastapi import FastAPI

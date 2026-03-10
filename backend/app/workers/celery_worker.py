@@ -1,5 +1,6 @@
 import os
 
+import app.pkg_resources_shim  # noqa: F401 - bootstrap before crewai
 from celery import Celery
 from celery.schedules import crontab
 from celery.utils.log import get_task_logger
