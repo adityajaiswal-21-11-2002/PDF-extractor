@@ -1,12 +1,14 @@
 # Deploy on Railway
 
-### Step 1: Set Root Directory
+### Step 1: Root Directory (choose one)
 
-**Important:** Your repo has a `backend/` folder. In Railway:
+**Option A – Root Directory = `backend`**  
+1. Settings → Source → **Root Directory** = `backend`  
+2. Railway will use `backend/Dockerfile` and `backend/requirements.txt`
 
-1. Open your service → **Settings** → **Source**
-2. Set **Root Directory** to `backend`
-3. Save
+**Option B – No Root Directory**  
+1. Leave Root Directory empty  
+2. Railway will use the `Dockerfile` at repo root (builds from `backend/`)
 
 ### Step 2: Add environment variables
 
