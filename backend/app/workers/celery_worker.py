@@ -10,7 +10,6 @@ from app.core.config import settings
 from app.database.session import db_session
 from app.models.job import JobStatusEnum, ProcessingJob
 from app.services.job_service import JobService
-from app.agents.crew_orchestrator import CrewOrchestrator
 
 
 celery_app = Celery(
@@ -74,6 +73,8 @@ def process_pdf_job(self, job_id: int, recipient_email: str) -> None:
             return
 
         try:
+            from app.agents.crew_orchestrator import CrewOrchestrator
+
             orchestrator = CrewOrchestrator(
                 db=db,
                 job=job,

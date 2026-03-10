@@ -46,6 +46,8 @@ In **Environment** → **Add Environment Variable**, add:
 | `SMTP_PASSWORD` | Gmail App Password |
 | `OPENAI_API_KEY` | Your OpenAI API key |
 | `SECRET_KEY` | Any random string |
+| `CREWAI_DISABLE_TELEMETRY` | `true` *(reduces memory)* |
+| `OTEL_SDK_DISABLED` | `true` *(reduces memory)* |
 
 ### Step 5: Allow external connections
 
@@ -70,6 +72,7 @@ In **Environment** → **Add Environment Variable**, add:
 | Database connection error | Check `DATABASE_URL`; Aiven must allow connections from Render |
 | Redis connection error | Check `REDIS_URL`; Redis Labs must allow public access |
 | Email not sending | Use a [Gmail App Password](https://support.google.com/accounts/answer/185833) |
+| Out of memory (512Mi) | Add `CREWAI_DISABLE_TELEMETRY=true` and `OTEL_SDK_DISABLED=true`. Free tier runs web + Celery in one container; if it still OOMs, upgrade to Starter ($7/mo) |
 
 ---
 

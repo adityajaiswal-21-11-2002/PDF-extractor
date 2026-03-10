@@ -76,10 +76,11 @@ def create_app() -> FastAPI:
     # Include versioned API router
     app.include_router(api_router, prefix="/api")
 
-    @app.get("/", include_in_schema=False)
+    @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
     async def index() -> FileResponse:
         """
         Serve a simple HTML frontend for uploading PDFs.
+        Supports HEAD for Render health checks.
         """
         return FileResponse(BASE_DIR / "index.html")
 
