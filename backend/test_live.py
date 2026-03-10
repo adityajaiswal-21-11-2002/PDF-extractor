@@ -10,7 +10,8 @@ import time
 import urllib.error
 import urllib.request
 
-BASE_URL = sys.argv[1] if len(sys.argv) > 1 else "https://pdf-extractor-l71q.onrender.com"
+BASE_URL = sys.argv[1] if len(sys.argv) > 1 else "https://pdf-extractor-production-0106.up.railway.app"
+RECIPIENT_EMAIL = "adityajaiswal1196@gmail.com"  # User email for composed PDF emails
 TIMEOUT = 90  # Cold start can take 30-60s on free tier
 RESULTS = []
 
@@ -103,7 +104,7 @@ def run():
                 "Content-Type: application/pdf\r\n\r\n"
             ).encode() + pdf_data + f"\r\n--{boundary}--\r\n".encode()
             req = urllib.request.Request(
-                f"{BASE_URL}/api/upload?recipient_email=test@example.com",
+                f"{BASE_URL}/api/upload?recipient_email={RECIPIENT_EMAIL}",
                 data=body,
                 method="POST",
                 headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
@@ -142,7 +143,7 @@ def run():
             f"--{boundary}--\r\n"
         ).encode()
         req = urllib.request.Request(
-            f"{BASE_URL}/api/upload?recipient_email=test@example.com",
+            f"{BASE_URL}/api/upload?recipient_email={RECIPIENT_EMAIL}",
             data=body,
             method="POST",
             headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},

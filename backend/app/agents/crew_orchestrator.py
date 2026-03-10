@@ -2,7 +2,6 @@ import json
 from typing import Any, Dict, Tuple
 
 from crewai import Crew, Process
-from langchain_openai import ChatOpenAI
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -18,6 +17,53 @@ from .email_sender import build_email_sender_agent, email_sender_task
 
 
 logger = get_logger(__name__)
+
+
+def _create_llm():
+    """Create LLM based on LLM_PROVIDER. Supports openai (paid), groq (free), gemini (free)."""
+    provider = (settings.LLM_PROVIDER or "groq").lower()
+
+    if provider == "groq":
+        try:
+            from langchain_groq import ChatGroq
+        except ImportError:
+            raise ImportError(
+                "LLM_PROVIDER=groq requires: pip install langchain-groq. "
+                "Get free API key at https://console.groq.com"
+            )
+        if not settings.GROQ_API_KEY:
+            raise ValueError("GROQ_API_KEY must be set when LLM_PROVIDER=groq")
+        return ChatGroq(
+            model="llama-3.1-8b-instant",
+            temperature=0.1,
+            api_key=settings.GROQ_API_KEY,
+        )
+
+    if provider == "gemini":
+        try:
+            from langchain_google_genai import ChatGoogleGenerativeAI
+        except ImportError:
+            raise ImportError(
+                "LLM_PROVIDER=gemini requires: pip install langchain-google-genai. "
+                "Get free API key at https://aistudio.google.com/apikey"
+            )
+        if not settings.GOOGLE_API_KEY:
+            raise ValueError("GOOGLE_API_KEY must be set when LLM_PROVIDER=gemini")
+        return ChatGoogleGenerativeAI(
+            model="gemini-1.5-flash",
+            temperature=0.1,
+            google_api_key=settings.GOOGLE_API_KEY,
+        )
+
+    # Default: OpenAI
+    from langchain_openai import ChatOpenAI
+    if not settings.OPENAI_API_KEY:
+        raise ValueError("OPENAI_API_KEY must be set when LLM_PROVIDER=openai")
+    return ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=0.1,
+        timeout=30,
+    )
 
 
 def _parse_json_output(raw: Any) -> Dict | None:
@@ -49,13 +95,7 @@ class CrewOrchestrator:
         self.job = job
         self.document_text = document_text
         self.email_service = EmailService()
-
-        # Configure LLM (can be swapped via settings)
-        self.llm = ChatOpenAI(
-            model="gpt-4o-mini",
-            temperature=0.1,
-            timeout=30,
-        )
+        self.llm = _create_llm()
 
     def _persist_agent_output(
         self, agent_name: str, step: str, raw: str | None, structured: Dict | None

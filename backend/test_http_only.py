@@ -9,6 +9,7 @@ import urllib.error
 import urllib.request
 
 BASE_URL = os.environ.get("TEST_BASE_URL", "http://127.0.0.1:8000")
+RECIPIENT_EMAIL = "adityajaiswal1196@gmail.com"  # User email for composed PDF emails
 RESULTS = []
 
 
@@ -79,7 +80,7 @@ def run():
                 "Content-Type: application/pdf\r\n\r\n"
             ).encode() + pdf_data + f"\r\n--{boundary}--\r\n".encode()
             req = urllib.request.Request(
-                f"{BASE_URL}/api/upload?recipient_email=test@example.com",
+                f"{BASE_URL}/api/upload?recipient_email={RECIPIENT_EMAIL}",
                 data=body,
                 method="POST",
                 headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
@@ -118,7 +119,7 @@ def run():
             f"--{boundary}--\r\n"
         ).encode()
         req = urllib.request.Request(
-            f"{BASE_URL}/api/upload?recipient_email=test@example.com",
+            f"{BASE_URL}/api/upload?recipient_email={RECIPIENT_EMAIL}",
             data=body,
             method="POST",
             headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},

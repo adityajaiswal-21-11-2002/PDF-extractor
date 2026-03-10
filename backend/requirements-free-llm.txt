@@ -1,0 +1,4 @@
+# Gemini support - install when using LLM_PROVIDER=gemini
+# Groq is in main requirements.txt
+# Run: pip install -r requirements-free-llm.txt
+langchain-google-genai>=2.0.0

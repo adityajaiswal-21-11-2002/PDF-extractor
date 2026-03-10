@@ -250,7 +250,8 @@ cp .env.example .env
 
 2. **Configure Environment**
 
-- Update `.env` with your Postgres, Redis, email backend, and `OPENAI_API_KEY`.
+- Update `.env` with your Postgres, Redis, email backend, and LLM keys.
+- **LLM:** Default is Groq (free). Set `GROQ_API_KEY` from [console.groq.com](https://console.groq.com). Or use `LLM_PROVIDER=openai` + `OPENAI_API_KEY`, or `LLM_PROVIDER=gemini` + `GOOGLE_API_KEY` (run `pip install -r requirements-free-llm.txt` for Gemini).
 
 3. **Install Dependencies (Local Dev)**
 

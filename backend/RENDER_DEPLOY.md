@@ -44,7 +44,9 @@ In **Environment** → **Add Environment Variable**, add:
 | `SMTP_PORT` | `587` |
 | `SMTP_USER` | Your Gmail address |
 | `SMTP_PASSWORD` | Gmail App Password |
-| `OPENAI_API_KEY` | Your OpenAI API key |
+| `LLM_PROVIDER` | `groq` (default, free) or `openai` |
+| `GROQ_API_KEY` | Free at [console.groq.com](https://console.groq.com) (when LLM_PROVIDER=groq) |
+| `OPENAI_API_KEY` | Your OpenAI API key (when LLM_PROVIDER=openai) |
 | `SECRET_KEY` | Any random string |
 | `CREWAI_DISABLE_TELEMETRY` | `true` *(reduces memory)* |
 | `OTEL_SDK_DISABLED` | `true` *(reduces memory)* |

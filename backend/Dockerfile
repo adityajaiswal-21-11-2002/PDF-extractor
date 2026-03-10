@@ -3,8 +3,10 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install dependencies first (better layer caching)
-COPY requirements.txt .
-RUN pip install --upgrade pip setuptools && pip install -r requirements.txt
+COPY requirements.txt requirements-free-llm.txt ./
+RUN pip install --upgrade pip setuptools \
+    && pip install -r requirements.txt \
+    && pip install -r requirements-free-llm.txt
 
 # Copy application code
 COPY . .

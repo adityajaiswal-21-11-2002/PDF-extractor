@@ -56,6 +56,9 @@ class Settings(BaseSettings):
     SENDGRID_API_KEY: Optional[str] = None
     SECRET_KEY: str = "CHANGE_ME"
     OPENAI_API_KEY: Optional[str] = None
+    LLM_PROVIDER: str = Field("groq", description="LLM backend: groq (default), openai, or gemini")
+    GOOGLE_API_KEY: Optional[str] = None  # For gemini (free at aistudio.google.com)
+    GROQ_API_KEY: Optional[str] = None   # For groq (free at console.groq.com)
     BACKEND_CORS_ORIGINS: Union[str, List[str]] = []
 
     @property
